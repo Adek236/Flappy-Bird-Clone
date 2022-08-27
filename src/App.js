@@ -63,7 +63,7 @@ function App() {
     if (gameStarted) {
       const collisionWidth =
         GAME_WINDOW_WIDTH - BIRD_SIZE - OBSTACLE_WIDTH - OBSTACLE_SPEED;
-      const collisionMaxFly = obstacleUpHeight;
+      const collisionMaxFly = obstacleUpHeight-BIRD_SIZE;
       const collisionMinFly = GAME_WINDOW_HEIGHT - obstacleDownHeight;
       if (
         collisionWidth <= obstacleDistance &&
