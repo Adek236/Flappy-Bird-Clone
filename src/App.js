@@ -6,7 +6,7 @@ const GAME_WINDOW_WIDTH = 300;
 const GAME_WINDOW_HEIGHT = 400;
 const GRAVITY = 5;
 const BIRD_SIZE = 25;
-const BIRD_FLY_START = GAME_WINDOW_HEIGHT / 2 - BIRD_SIZE;
+const BIRD_FLY_START = (GAME_WINDOW_HEIGHT - BIRD_SIZE) / 2;
 const BIRD_JUMP = 70;
 const OBSTACLE_WIDTH = 50;
 const OBSTACLE_SPEED = 4;
@@ -23,6 +23,7 @@ function App() {
     OBSTACLE_MAX_HEIGHT / 2
   );
   const [obstacleDistance, setObstacleDistance] = useState(0);
+  const [score, setScore] = useState(0);
 
   // bird moves
   useEffect(() => {
@@ -43,22 +44,59 @@ function App() {
       const obstacleInterval = setInterval(() => {
         if (obstacleDistance >= GAME_WINDOW_WIDTH) {
           setObstacleDistance(-OBSTACLE_WIDTH);
-          // OBSTACLE_MAX_HEIGHT
-          console.log("obstacleUpHeight ", obstacleUpHeight)
-          console.log("obstacleDownHeight ", obstacleDownHeight)
+          const obUpHeight = Math.floor(
+            Math.random() * OBSTACLE_MAX_HEIGHT + 1
+          );
+          const obDownHeight = OBSTACLE_MAX_HEIGHT - obUpHeight;
+          setObstacleUpHeight(obUpHeight);
+          setObstacleDownHeight(obDownHeight);
+          setScore(prev => prev + 1)
         }
-        setObstacleDistance(prev => prev + OBSTACLE_SPEED);
+        setObstacleDistance((prev) => prev + OBSTACLE_SPEED);
       }, 24);
       return () => clearInterval(obstacleInterval);
     }
-  }, [gameStarted,obstacleDistance]);
-  
+  }, [gameStarted, obstacleDistance]);
+
+  // physics
+  useEffect(() => {
+    if (gameStarted) {
+      const collisionWidth =
+        GAME_WINDOW_WIDTH - BIRD_SIZE - OBSTACLE_WIDTH - OBSTACLE_SPEED;
+      const collisionMaxFly = obstacleUpHeight;
+      const collisionMinFly = GAME_WINDOW_HEIGHT - obstacleDownHeight;
+      if (
+        collisionWidth <= obstacleDistance &&
+        (collisionMaxFly >= birdFlyHeight || collisionMinFly <= birdFlyHeight)
+      ) {
+        resetGame();
+      }
+    }
+  }, [
+    gameStarted,
+    obstacleDistance,
+    birdFlyHeight,
+    obstacleDownHeight,
+    obstacleUpHeight,
+  ]);
+
   const birdJump = () => {
-    setGameStarted(true);
+    if (!gameStarted) {
+      setGameStarted(true);
+    }
     setBirdFlyHeight((prev) => {
       if (prev <= BIRD_JUMP) return (prev = -GRAVITY);
       return (prev = prev - BIRD_JUMP);
     });
+  };
+
+  const resetGame = () => {
+    setGameStarted(false);
+    setBirdFlyHeight(BIRD_FLY_START);
+    setObstacleUpHeight(OBSTACLE_MAX_HEIGHT / 2);
+    setObstacleDownHeight(OBSTACLE_MAX_HEIGHT / 2);
+    setObstacleDistance(0);
+    setScore(0);
   };
 
   return (
@@ -67,7 +105,8 @@ function App() {
         height={GAME_WINDOW_HEIGHT}
         width={GAME_WINDOW_WIDTH}
         onClick={() => birdJump()}
-      >
+        >
+        <Score>{score}</Score>
         <Bird size={BIRD_SIZE} flyHeight={birdFlyHeight} />
         <ObstacleUp
           height={obstacleUpHeight}
@@ -102,31 +141,50 @@ const GameWindow = styled.div`
   box-shadow: 0 2px 5px 0 black;
 `;
 
-const Bird = styled.div`
+const Score = styled.div`
+  z-index: 101;
   position: absolute;
-  top: ${(props) => props.flyHeight}px;
+  top: 10%;
+  left: 40%;
+  user-select: none;
+  font-size: 2rem;
+  color: black;
+`;
+
+const Bird = styled.div.attrs((props) => ({
+  style: {
+    top: props.flyHeight,
+  },
+}))`
   height: ${(props) => props.size}px;
   width: ${(props) => props.size}px;
+  position: absolute;
   background-color: red;
   border-radius: 50%;
   transition: all 100ms;
 `;
 
-const ObstacleUp = styled.div`
-  top: 0;
-  right: ${(props) => props.right}px;
-  position: absolute;
-  height: ${(props) => props.height}px;
+const ObstacleUp = styled.div.attrs((props) => ({
+  style: {
+    right: props.right,
+    height: props.height,
+  },
+}))`
   width: ${(props) => props.width}px;
+  top: 0;
+  position: absolute;
   background-color: green;
 `;
 
-const ObstacleDown = styled.div`
-  bottom: 0;
-  right: ${(props) => props.right}px;
-  position: absolute;
-  height: ${(props) => props.height}px;
+const ObstacleDown = styled.div.attrs((props) => ({
+  style: {
+    right: props.right,
+    height: props.height,
+  },
+}))`
   width: ${(props) => props.width}px;
+  bottom: 0;
+  position: absolute;
   background-color: green;
 `;
 
