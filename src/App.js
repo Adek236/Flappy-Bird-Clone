@@ -7,10 +7,10 @@ const GAME_WINDOW_HEIGHT = 400;
 const GRAVITY = 5;
 const BIRD_SIZE = 25;
 const BIRD_FLY_START = (GAME_WINDOW_HEIGHT - BIRD_SIZE) / 2;
-const BIRD_JUMP = 70;
+const BIRD_JUMP = 50;
 const OBSTACLE_WIDTH = 50;
 const OBSTACLE_SPEED = 4;
-const OBSTACLE_GAP = 100;
+const OBSTACLE_GAP = 120;
 const OBSTACLE_MAX_HEIGHT = GAME_WINDOW_HEIGHT - OBSTACLE_GAP;
 
 function App() {
@@ -50,7 +50,7 @@ function App() {
           const obDownHeight = OBSTACLE_MAX_HEIGHT - obUpHeight;
           setObstacleUpHeight(obUpHeight);
           setObstacleDownHeight(obDownHeight);
-          setScore(prev => prev + 1)
+          setScore((prev) => prev + 1);
         }
         setObstacleDistance((prev) => prev + OBSTACLE_SPEED);
       }, 24);
@@ -63,13 +63,39 @@ function App() {
     if (gameStarted) {
       const collisionWidth =
         GAME_WINDOW_WIDTH - BIRD_SIZE - OBSTACLE_WIDTH - OBSTACLE_SPEED;
-      const collisionMaxFly = obstacleUpHeight-BIRD_SIZE;
-      const collisionMinFly = GAME_WINDOW_HEIGHT - obstacleDownHeight;
+      const collisionMaxFly = obstacleUpHeight;
+      const collisionMinFly =
+        GAME_WINDOW_HEIGHT - obstacleDownHeight - BIRD_SIZE;
+      // if (
+      //   collisionWidth <= obstacleDistance &&
+      //   (collisionMaxFly >= birdFlyHeight || collisionMinFly <= birdFlyHeight)
+      // ) {
+      //   resetGame();
+      // }
       if (
         collisionWidth <= obstacleDistance &&
         (collisionMaxFly >= birdFlyHeight || collisionMinFly <= birdFlyHeight)
       ) {
-        resetGame();
+        console.log(collisionWidth)
+        console.log(obstacleDistance)
+        if (collisionMaxFly >= birdFlyHeight) {
+          setGameStarted(false);
+          setBirdFlyHeight(collisionMaxFly);
+          setTimeout(() => {
+            resetGame();
+          }, 1000);
+        } else if (collisionMinFly <= birdFlyHeight) {
+          setGameStarted(false);
+          setBirdFlyHeight(collisionMinFly);
+          // block click mouse here 
+          setTimeout(() => {
+            resetGame(); // <-- unblock mouse
+          }, 1000);
+        } else if (collisionWidth <= obstacleDistance) {
+          setGameStarted(false);
+          resetGame();
+        }
+        // collisionMinFly <= birdFlyHeight
       }
     }
   }, [
@@ -91,7 +117,7 @@ function App() {
   };
 
   const resetGame = () => {
-    setGameStarted(false);
+    // setGameStarted(false);
     setBirdFlyHeight(BIRD_FLY_START);
     setObstacleUpHeight(OBSTACLE_MAX_HEIGHT / 2);
     setObstacleDownHeight(OBSTACLE_MAX_HEIGHT / 2);
@@ -105,7 +131,7 @@ function App() {
         height={GAME_WINDOW_HEIGHT}
         width={GAME_WINDOW_WIDTH}
         onClick={() => birdJump()}
-        >
+      >
         <Score>{score}</Score>
         <Bird size={BIRD_SIZE} flyHeight={birdFlyHeight} />
         <ObstacleUp
