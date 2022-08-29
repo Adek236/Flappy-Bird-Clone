@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import "./App.css";
+import birdImage from "./assets/images/bird1.png"
 
 const GAME_WINDOW_WIDTH = 300;
 const GAME_WINDOW_HEIGHT = 400;
@@ -24,6 +25,7 @@ function App() {
   );
   const [obstacleDistance, setObstacleDistance] = useState(0);
   const [score, setScore] = useState(0);
+  const [canClick, setCanClick] = useState(true);
 
   // bird moves
   useEffect(() => {
@@ -66,36 +68,30 @@ function App() {
       const collisionMaxFly = obstacleUpHeight;
       const collisionMinFly =
         GAME_WINDOW_HEIGHT - obstacleDownHeight - BIRD_SIZE;
-      // if (
-      //   collisionWidth <= obstacleDistance &&
-      //   (collisionMaxFly >= birdFlyHeight || collisionMinFly <= birdFlyHeight)
-      // ) {
-      //   resetGame();
-      // }
       if (
         collisionWidth <= obstacleDistance &&
         (collisionMaxFly >= birdFlyHeight || collisionMinFly <= birdFlyHeight)
       ) {
-        console.log(collisionWidth)
-        console.log(obstacleDistance)
-        if (collisionMaxFly >= birdFlyHeight) {
+        const hasBetweenObstacle =
+          obstacleDistance - collisionWidth > 3 ? true : false;
+        if (collisionMaxFly >= birdFlyHeight && hasBetweenObstacle) {
           setGameStarted(false);
           setBirdFlyHeight(collisionMaxFly);
+          setCanClick(false);
           setTimeout(() => {
             resetGame();
           }, 1000);
-        } else if (collisionMinFly <= birdFlyHeight) {
+        } else if (collisionMinFly <= birdFlyHeight && hasBetweenObstacle) {
           setGameStarted(false);
           setBirdFlyHeight(collisionMinFly);
-          // block click mouse here 
+          setCanClick(false);
           setTimeout(() => {
-            resetGame(); // <-- unblock mouse
+            resetGame();
           }, 1000);
         } else if (collisionWidth <= obstacleDistance) {
           setGameStarted(false);
           resetGame();
         }
-        // collisionMinFly <= birdFlyHeight
       }
     }
   }, [
@@ -110,19 +106,21 @@ function App() {
     if (!gameStarted) {
       setGameStarted(true);
     }
-    setBirdFlyHeight((prev) => {
-      if (prev <= BIRD_JUMP) return (prev = -GRAVITY);
-      return (prev = prev - BIRD_JUMP);
-    });
+    if (canClick) {
+      setBirdFlyHeight((prev) => {
+        if (prev <= BIRD_JUMP) return (prev = -GRAVITY);
+        return (prev = prev - BIRD_JUMP);
+      });
+    }
   };
 
   const resetGame = () => {
-    // setGameStarted(false);
     setBirdFlyHeight(BIRD_FLY_START);
     setObstacleUpHeight(OBSTACLE_MAX_HEIGHT / 2);
     setObstacleDownHeight(OBSTACLE_MAX_HEIGHT / 2);
     setObstacleDistance(0);
     setScore(0);
+    setCanClick(true);
   };
 
   return (
@@ -133,7 +131,9 @@ function App() {
         onClick={() => birdJump()}
       >
         <Score>{score}</Score>
-        <Bird size={BIRD_SIZE} flyHeight={birdFlyHeight} />
+        <Bird size={BIRD_SIZE} flyHeight={birdFlyHeight}>
+          <BirdSprite birdImage={birdImage}/>  
+        </Bird>
         <ObstacleUp
           height={obstacleUpHeight}
           width={OBSTACLE_WIDTH}
@@ -163,7 +163,7 @@ const GameWindow = styled.div`
   overflow: hidden;
   height: ${(props) => props.height}px;
   width: ${(props) => props.width}px;
-  background-color: lightblue;
+  background-color: lightgray;
   box-shadow: 0 2px 5px 0 black;
 `;
 
@@ -184,10 +184,22 @@ const Bird = styled.div.attrs((props) => ({
 }))`
   height: ${(props) => props.size}px;
   width: ${(props) => props.size}px;
-  position: absolute;
-  background-color: red;
-  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
   transition: all 100ms;
+`;
+
+const BirdSprite = styled.div.attrs((props) => ({
+  style: {
+    // top: props.flyHeight,
+  },
+}))`
+  height: 25px;
+  width: 75px;
+  position: absolute;
+  animation: walkAnimation 0.8s steps(3) infinite;
+  background: url(${(props) => props.birdImage}) no-repeat no-repeat;
+  image-rendering: pixelated;
 `;
 
 const ObstacleUp = styled.div.attrs((props) => ({
