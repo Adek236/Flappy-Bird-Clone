@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import "./App.css";
-import birdImage from "./assets/images/bird1.png"
-import obstacleUpImage from "./assets/images/obstacleup1.png"
-import obstacleDownImage from "./assets/images/obstacledown1.png"
-import cloudImage from "./assets/images/cloud1.png"
+import birdImage from "./assets/images/bird1.png";
+import obstacleUpImage from "./assets/images/obstacleup1.png";
+import obstacleDownImage from "./assets/images/obstacledown1.png";
+import cloudImage from "./assets/images/cloud1.png";
 
 const GAME_WINDOW_WIDTH = 300;
 const GAME_WINDOW_HEIGHT = 400;
@@ -16,6 +16,7 @@ const OBSTACLE_WIDTH = 50;
 const OBSTACLE_SPEED = 4;
 const OBSTACLE_GAP = 120;
 const OBSTACLE_MAX_HEIGHT = GAME_WINDOW_HEIGHT - OBSTACLE_GAP;
+const FLOOR = GAME_WINDOW_HEIGHT - BIRD_SIZE;
 const CLOUD_SPEED = 6;
 
 function App() {
@@ -76,6 +77,10 @@ function App() {
       const collisionMaxFly = obstacleUpHeight;
       const collisionMinFly =
         GAME_WINDOW_HEIGHT - obstacleDownHeight - BIRD_SIZE;
+      if (FLOOR === birdFlyHeight) {
+        setGameStarted(false);
+        resetGame();
+      }
       if (
         collisionWidth <= obstacleDistance &&
         (collisionMaxFly >= birdFlyHeight || collisionMinFly <= birdFlyHeight)
@@ -144,7 +149,7 @@ function App() {
       >
         <Score>{score}</Score>
         <Bird size={BIRD_SIZE} flyHeight={birdFlyHeight} rotate={rotateBird}>
-          <BirdSprite birdImage={birdImage}/>  
+          <BirdSprite birdImage={birdImage} />
         </Bird>
         <ObstacleUp
           obstacleImage={obstacleUpImage}
@@ -153,14 +158,29 @@ function App() {
           right={obstacleDistance}
         />
         <ObstacleDown
-        obstacleImage={obstacleDownImage}
+          obstacleImage={obstacleDownImage}
           height={obstacleDownHeight}
           width={OBSTACLE_WIDTH}
           right={obstacleDistance}
         />
-        <Cloud cloudImage={cloudImage} scale={3} right={-130+cloudDistance} top={"20%"}/>
-        <Cloud cloudImage={cloudImage} scale={2} right={-40+cloudDistance} top={"70%"}/>
-        <Cloud cloudImage={cloudImage} scale={4} right={-80+cloudDistance} top={"90%"}/>
+        <Cloud
+          cloudImage={cloudImage}
+          scale={3}
+          right={-130 + cloudDistance}
+          top={"20%"}
+        />
+        <Cloud
+          cloudImage={cloudImage}
+          scale={2}
+          right={-40 + cloudDistance}
+          top={"70%"}
+        />
+        <Cloud
+          cloudImage={cloudImage}
+          scale={4}
+          right={-80 + cloudDistance}
+          top={"90%"}
+        />
       </GameWindow>
     </Layout>
   );
@@ -182,7 +202,6 @@ const GameWindow = styled.div`
   width: ${(props) => props.width}px;
   background-color: #8dc6ff;
   box-shadow: 0 2px 5px 0 black;
-  /* transform: scale(1.0) */
 `;
 
 const Score = styled.div`
@@ -199,7 +218,7 @@ const Score = styled.div`
 const Bird = styled.div.attrs((props) => ({
   style: {
     top: props.flyHeight,
-    transform: `rotate(${props.rotate})`
+    transform: `rotate(${props.rotate})`,
   },
 }))`
   height: ${(props) => props.size}px;
@@ -210,17 +229,12 @@ const Bird = styled.div.attrs((props) => ({
   z-index: 1;
 `;
 
-const BirdSprite = styled.div.attrs((props) => ({
-  style: {
-    // top: props.flyHeight,
-  },
-}))`
+const BirdSprite = styled.div`
   height: 25px;
   width: 75px;
   position: absolute;
   animation: flyAnimation 0.8s steps(3) infinite;
   background: url(${(props) => props.birdImage}) no-repeat no-repeat;
-  /* image-rendering: pixelated; */
 `;
 
 const ObstacleUp = styled.div.attrs((props) => ({
