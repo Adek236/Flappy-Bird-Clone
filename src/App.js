@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import "./App.css";
 import birdImage from "./assets/images/bird1.png"
+import obstacleUpImage from "./assets/images/obstacleup1.png"
+import obstacleDownImage from "./assets/images/obstacledown1.png"
+import cloudImage from "./assets/images/cloud1.png"
 
 const GAME_WINDOW_WIDTH = 300;
 const GAME_WINDOW_HEIGHT = 400;
@@ -13,6 +16,7 @@ const OBSTACLE_WIDTH = 50;
 const OBSTACLE_SPEED = 4;
 const OBSTACLE_GAP = 120;
 const OBSTACLE_MAX_HEIGHT = GAME_WINDOW_HEIGHT - OBSTACLE_GAP;
+const CLOUD_SPEED = 6;
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false);
@@ -26,6 +30,8 @@ function App() {
   const [obstacleDistance, setObstacleDistance] = useState(0);
   const [score, setScore] = useState(0);
   const [canClick, setCanClick] = useState(true);
+  const [rotateBird, setRotateBird] = useState(0);
+  const [cloudDistance, setCloudDistance] = useState(0);
 
   // bird moves
   useEffect(() => {
@@ -40,7 +46,7 @@ function App() {
     }
   }, [birdFlyHeight, gameStarted]);
 
-  // obstacle moves
+  // obstacle, clouds moves
   useEffect(() => {
     if (gameStarted) {
       const obstacleInterval = setInterval(() => {
@@ -53,8 +59,10 @@ function App() {
           setObstacleUpHeight(obUpHeight);
           setObstacleDownHeight(obDownHeight);
           setScore((prev) => prev + 1);
+          setCloudDistance(0);
         }
         setObstacleDistance((prev) => prev + OBSTACLE_SPEED);
+        setCloudDistance((prev) => prev + CLOUD_SPEED);
       }, 24);
       return () => clearInterval(obstacleInterval);
     }
@@ -107,6 +115,10 @@ function App() {
       setGameStarted(true);
     }
     if (canClick) {
+      setRotateBird("-30deg");
+      setTimeout(() => {
+        setRotateBird(0);
+      }, 150);
       setBirdFlyHeight((prev) => {
         if (prev <= BIRD_JUMP) return (prev = -GRAVITY);
         return (prev = prev - BIRD_JUMP);
@@ -131,19 +143,24 @@ function App() {
         onClick={() => birdJump()}
       >
         <Score>{score}</Score>
-        <Bird size={BIRD_SIZE} flyHeight={birdFlyHeight}>
+        <Bird size={BIRD_SIZE} flyHeight={birdFlyHeight} rotate={rotateBird}>
           <BirdSprite birdImage={birdImage}/>  
         </Bird>
         <ObstacleUp
+          obstacleImage={obstacleUpImage}
           height={obstacleUpHeight}
           width={OBSTACLE_WIDTH}
           right={obstacleDistance}
         />
         <ObstacleDown
+        obstacleImage={obstacleDownImage}
           height={obstacleDownHeight}
           width={OBSTACLE_WIDTH}
           right={obstacleDistance}
         />
+        <Cloud cloudImage={cloudImage} scale={3} right={-130+cloudDistance} top={"20%"}/>
+        <Cloud cloudImage={cloudImage} scale={2} right={-40+cloudDistance} top={"70%"}/>
+        <Cloud cloudImage={cloudImage} scale={4} right={-80+cloudDistance} top={"90%"}/>
       </GameWindow>
     </Layout>
   );
@@ -163,23 +180,26 @@ const GameWindow = styled.div`
   overflow: hidden;
   height: ${(props) => props.height}px;
   width: ${(props) => props.width}px;
-  background-color: lightgray;
+  background-color: #8dc6ff;
   box-shadow: 0 2px 5px 0 black;
+  /* transform: scale(1.0) */
 `;
 
 const Score = styled.div`
-  z-index: 101;
+  z-index: 2;
   position: absolute;
   top: 10%;
   left: 40%;
   user-select: none;
   font-size: 2rem;
   color: black;
+  font-family: "Luckiest Guy", cursive;
 `;
 
 const Bird = styled.div.attrs((props) => ({
   style: {
     top: props.flyHeight,
+    transform: `rotate(${props.rotate})`
   },
 }))`
   height: ${(props) => props.size}px;
@@ -187,6 +207,7 @@ const Bird = styled.div.attrs((props) => ({
   position: relative;
   overflow: hidden;
   transition: all 100ms;
+  z-index: 1;
 `;
 
 const BirdSprite = styled.div.attrs((props) => ({
@@ -197,9 +218,9 @@ const BirdSprite = styled.div.attrs((props) => ({
   height: 25px;
   width: 75px;
   position: absolute;
-  animation: walkAnimation 0.8s steps(3) infinite;
+  animation: flyAnimation 0.8s steps(3) infinite;
   background: url(${(props) => props.birdImage}) no-repeat no-repeat;
-  image-rendering: pixelated;
+  /* image-rendering: pixelated; */
 `;
 
 const ObstacleUp = styled.div.attrs((props) => ({
@@ -211,7 +232,10 @@ const ObstacleUp = styled.div.attrs((props) => ({
   width: ${(props) => props.width}px;
   top: 0;
   position: absolute;
-  background-color: green;
+  background-image: url(${(props) => props.obstacleImage});
+  background-position: bottom;
+  background-repeat: no-repeat;
+  z-index: 1;
 `;
 
 const ObstacleDown = styled.div.attrs((props) => ({
@@ -223,7 +247,26 @@ const ObstacleDown = styled.div.attrs((props) => ({
   width: ${(props) => props.width}px;
   bottom: 0;
   position: absolute;
-  background-color: green;
+  background-image: url(${(props) => props.obstacleImage});
+  background-position: top;
+  background-repeat: no-repeat;
+  z-index: 1;
+`;
+
+const Cloud = styled.div.attrs((props) => ({
+  style: {
+    right: props.right,
+  },
+}))`
+  width: 26px;
+  height: 11px;
+  position: absolute;
+  top: ${(props) => props.top};
+  transform: scale(${(props) => props.scale});
+  background-image: url(${(props) => props.cloudImage});
+  background-repeat: no-repeat;
+  z-index: 0;
+  image-rendering: pixelated;
 `;
 
 export default App;
