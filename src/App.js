@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import styled from "styled-components";
-import "./App.css";
+import "./FlappyBird.css";
 import birdImage from "./assets/images/bird1.png";
 import obstacleUpImage from "./assets/images/obstacleup1.png";
 import obstacleDownImage from "./assets/images/obstacledown1.png";
@@ -19,7 +19,27 @@ const OBSTACLE_MAX_HEIGHT = GAME_WINDOW_HEIGHT - OBSTACLE_GAP;
 const FLOOR = GAME_WINDOW_HEIGHT - BIRD_SIZE;
 const CLOUD_SPEED = 6;
 
-function App() {
+const useWindowHeight = (myRef) => {
+  const [windowHeight, setWindowHeight] = useState(0);
+
+  const handleResize = useCallback(() => {
+    setWindowHeight(myRef.current.offsetHeight);
+  }, [myRef]);
+
+  useEffect(() => {
+    if (myRef.current) {
+      setWindowHeight(myRef.current.offsetHeight);
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [myRef, handleResize]);
+
+  return { windowHeight };
+};
+
+function FlappyBird() {
+  const gameWindowRef = useRef(null);
+  const { windowHeight } = useWindowHeight(gameWindowRef);
   const [gameStarted, setGameStarted] = useState(false);
   const [birdFlyHeight, setBirdFlyHeight] = useState(BIRD_FLY_START);
   const [obstacleUpHeight, setObstacleUpHeight] = useState(
@@ -141,8 +161,9 @@ function App() {
   };
 
   return (
-    <Layout>
+    <Layout ref={gameWindowRef}>
       <GameWindow
+        windowHeight={windowHeight}
         height={GAME_WINDOW_HEIGHT}
         width={GAME_WINDOW_WIDTH}
         onClick={() => birdJump()}
@@ -187,15 +208,19 @@ function App() {
 }
 
 const Layout = styled.div`
-  height: 100vh;
+  height: 100%;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: lightgrey;
-`;
+  `;
 
-const GameWindow = styled.div`
+const GameWindow = styled.div.attrs((props) => ({
+  style: {
+    scale:`${GAME_WINDOW_HEIGHT >= props.windowHeight? 0.5 : 1}`,
+  },
+}))`
   position: relative;
   overflow: hidden;
   height: ${(props) => props.height}px;
@@ -283,4 +308,4 @@ const Cloud = styled.div.attrs((props) => ({
   image-rendering: pixelated;
 `;
 
-export default App;
+export default FlappyBird;
